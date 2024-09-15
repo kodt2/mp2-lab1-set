@@ -101,49 +101,112 @@ int TBitField::GetBit(const int n) const // получить значение б
     int Nperem = n / (sizeof(TELEM) * 8);
     int Nbit = n % (sizeof(TELEM) * 8);
     TELEM temp = pMem[Nperem];
-    temp = (temp & GetMemMask(n))>>((sizeof(TELEM) * 8) -n-1);
+    temp = (temp & GetMemMask(Nbit))>>((sizeof(TELEM) * 8) -Nbit-1);
     return temp;
 }
 // битовые операции
 
 TBitField& TBitField::operator=(const TBitField &bf) // присваивание
-{
+{   
+    BitLen = bf.BitLen;
+    MemLen = bf.MemLen;
+    delete[] pMem;
+    pMem = new TELEM[MemLen];    
+    for (int i = 0; i < MemLen; i++) {
+        pMem[i] = bf.pMem[i];
+    }
     return *this;
 }
 
 int TBitField::operator==(const TBitField &bf) const // сравнение
 {
-  return 0;
+    int temp = 1;
+    if (BitLen != bf.BitLen) {
+        throw "non equal size";
+    }
+    for (int i = 0; i < BitLen; i++) {
+        if (this->GetBit(i) == bf.GetBit(i)) {
+        }
+        else {
+            temp = 0;
+        }
+    }
+    return temp;
 }
 
 int TBitField::operator!=(const TBitField &bf) const // сравнение
 {
-  return 0;
+    int temp = 0;
+    if (BitLen != bf.BitLen) {
+        throw "non equal size";
+    }
+    for (int i = 0; i < MemLen; i++) {
+        if (pMem[i] == bf.pMem[i]) {
+        }
+        else {
+            temp = 1;
+        }
+    }
+    return temp;
 }
 
 TBitField TBitField::operator|(const TBitField &bf) // операция "или"
 {
-    return TBitField(0);
+    TBitField res = TBitField(std::max(BitLen, bf.BitLen));
+    for (int i = 0; i < std::min(MemLen, bf.MemLen); i++) {
+        res.pMem[i] = pMem[i] | bf.pMem[i];
+    }
+
+    return res;
 }
 
 TBitField TBitField::operator&(const TBitField &bf) // операция "и"
 {
-    return TBitField(0);
+    TBitField res = TBitField(std::max(BitLen, bf.BitLen));
+    for (int i = 0; i < std::min(MemLen, bf.MemLen); i++) {
+        res.pMem[i] = pMem[i] & bf.pMem[i];
+    }
+
+    return res;
 }
 
 TBitField TBitField::operator~(void) // отрицание
 {
-    return TBitField(0);
+    TBitField res = *this;
+    for (int i = 0; i < res.MemLen; i++) {
+        res.pMem[i] = ~res.pMem[i];
+    }
+    int Nperem;
+    int Nbit;
+    for (int i = BitLen; i < res.MemLen * sizeof(TELEM) * 8; i++) {
+        Nperem = i / (sizeof(TELEM) * 8);
+        Nbit = i % (sizeof(TELEM) * 8);
+        res.pMem[Nperem] = res.pMem[Nperem] & ~GetMemMask(Nbit);
+    }
+    return res;
 }
 
 // ввод/вывод
 
 istream &operator>>(istream &istr, TBitField &bf) // ввод
-{
+{   
+    int n;
+    istr >> n;
+    try {
+        bf.SetBit(n);
+    }
+    catch (...) {
+        throw "Wrong index";
+    }
     return istr;
 }
 
 ostream &operator<<(ostream &ostr, const TBitField &bf) // вывод
 {
+    ostr << "{";
+    for (int i = 0; i < bf.BitLen; i++) {
+        ostr << bf.GetBit(i)<<" ";
+    }
+    ostr << "}";
     return ostr;
 }
