@@ -90,7 +90,7 @@ int TSet::operator!=(const TSet &s) const // сравнение
 
 TSet TSet::operator+(const TSet &s) // объединение
 {
-    TBitField temp = TBitField(*this) | TBitField(s) ;
+    TBitField temp =BitField | s.BitField;
     return TSet(temp);
 }
 
